@@ -1,0 +1,1 @@
+OpenTracing: Fix tracing of `outgoing_replication_request` to correctly cover the whole operation.

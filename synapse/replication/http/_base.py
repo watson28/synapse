@@ -255,8 +255,10 @@ class ReplicationEndpoint(metaclass=abc.ABCMeta):
                 _outgoing_request_counter.labels(cls.NAME, e.code).inc()
                 raise e.to_synapse_error()
             except Exception as e:
+                # raise a generic exception rather than a SynapseError to make sure
+                # we get a stacktrace for this one.
                 _outgoing_request_counter.labels(cls.NAME, "ERR").inc()
-                raise SynapseError(502, "Failed to talk to main process") from e
+                raise RuntimeError("Failed to talk to main process") from e
 
             _outgoing_request_counter.labels(cls.NAME, 200).inc()
             return result

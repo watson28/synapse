@@ -1,0 +1,1 @@
+Log a stacktrace when we fail to send a request to the main process.

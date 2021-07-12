@@ -6,7 +6,7 @@ on:
   push:
     # we build on develop and release branches to (hopefully) get early warning
     # of things breaking
-    branches: ["develop", "release-*", "*"]
+    branches: ["develop", "release-*", "**"]
 
     # we also rebuild on tags, so that we can be sure of picking the artifacts
     # from the right tag.

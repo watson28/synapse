@@ -432,7 +432,7 @@ class FederationHandler(BaseHandler):
         )
         return list(auth)
 
-    async def do_invite_join(
+    async def join_room_over_federation(
         self, target_hosts: Iterable[str], room_id: str, joinee: str, content: JsonDict
     ) -> Tuple[str, int]:
         """Attempts to join the `joinee` to the room `room_id` via the

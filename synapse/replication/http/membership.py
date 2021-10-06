@@ -90,7 +90,7 @@ class ReplicationRemoteJoinRestServlet(ReplicationEndpoint):
 
         logger.info("remote_join: %s into room: %s", user_id, room_id)
 
-        event_id, stream_id = await self.federation_handler.do_invite_join(
+        event_id, stream_id = await self.federation_handler.join_room_over_federation(
             remote_room_hosts, room_id, user_id, event_content
         )
 

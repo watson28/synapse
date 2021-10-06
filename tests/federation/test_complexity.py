@@ -75,7 +75,7 @@ class RoomComplexityTests(unittest.FederatingHomeserverTestCase):
 
         # Mock out some things, because we don't want to test the whole join
         fed_transport.client.get_json = Mock(return_value=make_awaitable({"v1": 9999}))
-        handler.federation_handler.do_invite_join = Mock(
+        handler.federation_handler.join_room_over_federation = Mock(
             return_value=make_awaitable(("", 1))
         )
 
@@ -106,7 +106,7 @@ class RoomComplexityTests(unittest.FederatingHomeserverTestCase):
 
         # Mock out some things, because we don't want to test the whole join
         fed_transport.client.get_json = Mock(return_value=make_awaitable({"v1": 9999}))
-        handler.federation_handler.do_invite_join = Mock(
+        handler.federation_handler.join_room_over_federation = Mock(
             return_value=make_awaitable(("", 1))
         )
 
@@ -144,7 +144,7 @@ class RoomComplexityTests(unittest.FederatingHomeserverTestCase):
 
         # Mock out some things, because we don't want to test the whole join
         fed_transport.client.get_json = Mock(return_value=make_awaitable(None))
-        handler.federation_handler.do_invite_join = Mock(
+        handler.federation_handler.join_room_over_federation = Mock(
             return_value=make_awaitable(("", 1))
         )
 
@@ -200,7 +200,7 @@ class RoomComplexityAdminTests(unittest.FederatingHomeserverTestCase):
 
         # Mock out some things, because we don't want to test the whole join
         fed_transport.client.get_json = Mock(return_value=make_awaitable({"v1": 9999}))
-        handler.federation_handler.do_invite_join = Mock(
+        handler.federation_handler.join_room_over_federation = Mock(
             return_value=make_awaitable(("", 1))
         )
 
@@ -230,7 +230,7 @@ class RoomComplexityAdminTests(unittest.FederatingHomeserverTestCase):
 
         # Mock out some things, because we don't want to test the whole join
         fed_transport.client.get_json = Mock(return_value=make_awaitable({"v1": 9999}))
-        handler.federation_handler.do_invite_join = Mock(
+        handler.federation_handler.join_room_over_federation = Mock(
             return_value=make_awaitable(("", 1))
         )
 

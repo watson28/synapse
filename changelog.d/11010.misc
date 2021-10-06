@@ -1,0 +1,1 @@
+Rename `do_invite_join` to `self.federation_handler.join_room_over_federation`.

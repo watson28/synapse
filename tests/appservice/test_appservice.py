@@ -46,7 +46,11 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.service.namespaces[ApplicationService.NS_USERS].append(_regex("@irc_.*"))
         self.event.sender = "@irc_foobar:matrix.org"
         self.assertTrue(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    self.service.is_interested_in_event(self.event)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -54,7 +58,11 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.service.namespaces[ApplicationService.NS_USERS].append(_regex("@irc_.*"))
         self.event.sender = "@someone_else:matrix.org"
         self.assertFalse(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    self.service.is_interested_in_event(self.event)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -64,7 +72,11 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.event.type = "m.room.member"
         self.event.state_key = "@irc_foobar:matrix.org"
         self.assertTrue(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    self.service.is_interested_in_event(self.event)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -74,7 +86,12 @@ class ApplicationServiceTestCase(unittest.TestCase):
         )
         self.event.room_id = "!some_prefixs0m3th1nGsome_suffix:matrix.org"
         self.assertTrue(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    # We need to provide the store here in order to carry out room checks
+                    self.service.is_interested_in_event(self.event, self.store)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -84,7 +101,11 @@ class ApplicationServiceTestCase(unittest.TestCase):
         )
         self.event.room_id = "!XqBunHwQIXUiqCaoxq:matrix.org"
         self.assertFalse(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    self.service.is_interested_in_event(self.event)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -99,7 +120,7 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.assertTrue(
             (
                 yield defer.ensureDeferred(
-                    self.service.is_interested(self.event, self.store)
+                    self.service.is_interested_in_event(self.event, self.store)
                 )
             )
         )
@@ -152,7 +173,7 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.assertFalse(
             (
                 yield defer.ensureDeferred(
-                    self.service.is_interested(self.event, self.store)
+                    self.service.is_interested_in_event(self.event, self.store)
                 )
             )
         )
@@ -169,7 +190,7 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.assertTrue(
             (
                 yield defer.ensureDeferred(
-                    self.service.is_interested(self.event, self.store)
+                    self.service.is_interested_in_event(self.event, self.store)
                 )
             )
         )
@@ -183,7 +204,11 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.event.content = {"membership": "invite"}
         self.event.state_key = self.service.sender
         self.assertTrue(
-            (yield defer.ensureDeferred(self.service.is_interested(self.event)))
+            (
+                yield defer.ensureDeferred(
+                    self.service.is_interested_in_event(self.event)
+                )
+            )
         )
 
     @defer.inlineCallbacks
@@ -199,7 +224,9 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.assertTrue(
             (
                 yield defer.ensureDeferred(
-                    self.service.is_interested(event=self.event, store=self.store)
+                    self.service.is_interested_in_event(
+                        event=self.event, store=self.store
+                    )
                 )
             )
         )

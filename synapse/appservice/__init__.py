@@ -171,10 +171,10 @@ class ApplicationService:
         if not event:
             return False
 
-        if self.is_interested_in_user(event.sender):
+        if self.is_user_in_namespace(event.sender):
             return True
         # also check m.room.member state key
-        if event.type == EventTypes.Member and self.is_interested_in_user(
+        if event.type == EventTypes.Member and self.is_user_in_namespace(
             event.state_key
         ):
             return True
@@ -207,13 +207,13 @@ class ApplicationService:
 
         # check joined member events
         for user_id in member_list:
-            if self.is_interested_in_user(user_id):
+            if self.is_user_in_namespace(user_id):
                 return True
         return False
 
     def _matches_room_id(self, event: EventBase) -> bool:
         if hasattr(event, "room_id"):
-            return self.is_interested_in_room(event.room_id)
+            return self.is_room_id_in_namespace(event.room_id)
         return False
 
     async def _matches_aliases(
@@ -224,11 +224,11 @@ class ApplicationService:
 
         alias_list = await store.get_aliases_for_room(event.room_id)
         for alias in alias_list:
-            if self.is_interested_in_alias(alias):
+            if self.is_room_alias_in_namespace(alias):
                 return True
         return False
 
-    async def is_interested(
+    async def is_interested_in_event(
         self, event: EventBase, store: Optional["DataStore"] = None
     ) -> bool:
         """Check if this service is interested in this event.
@@ -269,7 +269,7 @@ class ApplicationService:
             True if this service would like to know about presence for this user.
         """
         # Find all the rooms the sender is in
-        if self.is_interested_in_user(user_id.to_string()):
+        if self.is_user_in_namespace(user_id.to_string()):
             return True
         room_ids = await store.get_rooms_for_user(user_id.to_string())
 
@@ -279,16 +279,16 @@ class ApplicationService:
                 return True
         return False
 
-    def is_interested_in_user(self, user_id: str) -> bool:
+    def is_user_in_namespace(self, user_id: str) -> bool:
         return (
             bool(self._matches_regex(ApplicationService.NS_USERS, user_id))
             or user_id == self.sender
         )
 
-    def is_interested_in_alias(self, alias: str) -> bool:
+    def is_room_alias_in_namespace(self, alias: str) -> bool:
         return bool(self._matches_regex(ApplicationService.NS_ALIASES, alias))
 
-    def is_interested_in_room(self, room_id: str) -> bool:
+    def is_room_id_in_namespace(self, room_id: str) -> bool:
         return bool(self._matches_regex(ApplicationService.NS_ROOMS, room_id))
 
     def is_exclusive_user(self, user_id: str) -> bool:

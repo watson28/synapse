@@ -523,7 +523,7 @@ class ApplicationServicesHandler:
             if isinstance(user, UserID):
                 user = user.to_string()
 
-            if service.is_interested_in_user(user):
+            if service.is_user_in_namespace(user):
                 users_appservice_is_interested_in.append(user)
 
         if not users_appservice_is_interested_in:
@@ -580,7 +580,7 @@ class ApplicationServicesHandler:
 
         """
         users_appservice_is_interested_in = [
-            user for user in users if service.is_interested_in_user(user)
+            user for user in users if service.is_user_in_namespace(user)
         ]
 
         if not users_appservice_is_interested_in:
@@ -624,7 +624,7 @@ class ApplicationServicesHandler:
         room_alias_str = room_alias.to_string()
         services = self.store.get_app_services()
         alias_query_services = [
-            s for s in services if (s.is_interested_in_alias(room_alias_str))
+            s for s in services if (s.is_room_alias_in_namespace(room_alias_str))
         ]
         for alias_service in alias_query_services:
             is_known_alias = await self.appservice_api.query_alias(
@@ -713,14 +713,14 @@ class ApplicationServicesHandler:
         # inside of a list comprehension anymore.
         interested_list = []
         for s in services:
-            if await s.is_interested(event, self.store):
+            if await s.is_interested_in_event(event, self.store):
                 interested_list.append(s)
 
         return interested_list
 
     def _get_services_for_user(self, user_id: str) -> List[ApplicationService]:
         services = self.store.get_app_services()
-        return [s for s in services if (s.is_interested_in_user(user_id))]
+        return [s for s in services if (s.is_user_in_namespace(user_id))]
 
     def _get_services_for_3pn(self, protocol: str) -> List[ApplicationService]:
         services = self.store.get_app_services()

@@ -237,7 +237,7 @@ class ApplicationService:
         Returns:
             True if the application service is interested in the room, False if not.
         """
-        # Check if this room ID matches the appservice's room ID namespace
+        # Check if we have interest in this room ID
         if self.is_room_id_in_namespace(room_id):
             return True
 
@@ -270,8 +270,12 @@ class ApplicationService:
                 return True
         return False
 
+    @cached(num_args=1, cache_context=True)
     async def is_interested_in_event(
-        self, event: EventBase, store: Optional["DataStore"] = None
+        self,
+        event: EventBase,
+        cache_context: _CacheContext,
+        store: Optional["DataStore"] = None,
     ) -> bool:
         """Check if this service is interested in this event.
 
@@ -294,15 +298,17 @@ class ApplicationService:
         ):
             return True
 
-        # This will check the store, so should be run last
-        if await self._matches_aliases(event, store):
+        # This will check the datastore, so should be run last
+        if store is not None and await self.is_interested_in_room(
+            event.room_id, store, on_invalidate=cache_context.invalidate
+        ):
             return True
 
         return False
 
-    @cached(num_args=1)
+    @cached(num_args=1, cache_context=True)
     async def is_interested_in_presence(
-        self, user_id: UserID, store: "DataStore"
+        self, user_id: UserID, store: "DataStore", cache_context: _CacheContext
     ) -> bool:
         """Check if this service is interested a user's presence
 
@@ -320,7 +326,9 @@ class ApplicationService:
 
         # Then find out if the appservice is interested in any of those rooms
         for room_id in room_ids:
-            if await self.matches_user_in_member_list(room_id, store):
+            if await self.matches_user_in_member_list(
+                room_id, store, on_invalidate=cache_context.invalidate
+            ):
                 return True
         return False
 

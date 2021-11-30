@@ -767,7 +767,7 @@ class ApplicationServicesHandler:
         # inside of a list comprehension anymore.
         interested_list = []
         for s in services:
-            if await s.is_interested_in_event(event, self.store):
+            if await s.is_interested_in_event(event, store=self.store):
                 interested_list.append(s)
 
         return interested_list

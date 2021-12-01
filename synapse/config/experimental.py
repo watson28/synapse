@@ -49,3 +49,8 @@ class ExperimentalConfig(Config):
 
         # MSC3030 (Jump to date API endpoint)
         self.msc3030_enabled: bool = experimental.get("msc3030_enabled", False)
+
+        # MSC2775 (lazy load members on federation join)
+        self.msc2775_server_enabled: bool = experimental.get(
+            "msc2775_server_enabled", False
+        )

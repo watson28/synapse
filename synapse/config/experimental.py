@@ -59,3 +59,8 @@ class ExperimentalConfig(Config):
         self.msc2409_to_device_messages_enabled: bool = experimental.get(
             "msc2409_to_device_messages_enabled", False
         )
+
+        # MSC2775 (lazy load members on federation join)
+        self.msc2775_server_enabled: bool = experimental.get(
+            "msc2775_server_enabled", False
+        )

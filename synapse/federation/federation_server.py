@@ -645,14 +645,40 @@ class FederationServer(FederationBase):
         return {"event": ret_pdu.get_pdu_json(time_now)}
 
     async def on_send_join_request(
-        self, origin: str, content: JsonDict, room_id: str
+        self,
+        origin: str,
+        content: JsonDict,
+        room_id: str,
+        lazy_load_members: bool,
     ) -> Dict[str, Any]:
         event, context = await self._on_send_membership_event(
             origin, content, Membership.JOIN, room_id
         )
 
         prev_state_ids = await context.get_prev_state_ids()
-        state_ids = list(prev_state_ids.values())
+        state_ids: List[str]
+        if lazy_load_members:
+            # return all non-member events
+            state_ids = [
+                event_id
+                for (event_type, state_key), event_id in prev_state_ids.items()
+                if event_type != EventTypes.Member
+            ]
+
+            # we also need the current state of the current user (it's going to
+            # be an auth event for the new join, so we may as well return it)
+            current_membership_event_id = prev_state_ids.get(
+                (EventTypes.Member, event.state_key)
+            )
+            if current_membership_event_id is not None:
+                state_ids.append(current_membership_event_id)
+
+            # TODO: return a few members:
+            #   - those with invites
+            #   - those that are kicked? / banned
+        else:
+            state_ids = list(prev_state_ids.values())
+
         auth_chain = await self.store.get_auth_chain(room_id, state_ids)
         state = await self.store.get_events(state_ids)
 
@@ -664,6 +690,7 @@ class FederationServer(FederationBase):
             "event": event_json,
             "state": [p.get_pdu_json(time_now) for p in state.values()],
             "auth_chain": [p.get_pdu_json(time_now) for p in auth_chain],
+            "org.matrix.msc2775.lazy_load_members": lazy_load_members,
         }
 
     async def on_make_leave_request(

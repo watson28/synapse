@@ -412,6 +412,10 @@ class FederationV2SendJoinServlet(BaseFederationServerServlet):
 
     PREFIX = FEDERATION_V2_PREFIX
 
+    def __init__(self, hs: "HomeServer", *args, **kwargs):
+        super().__init__(hs, *args, **kwargs)
+        self._enable_msc2775 = hs.config.experimental.msc2775_server_enabled
+
     async def on_PUT(
         self,
         origin: str,
@@ -422,7 +426,15 @@ class FederationV2SendJoinServlet(BaseFederationServerServlet):
     ) -> Tuple[int, JsonDict]:
         # TODO(paul): assert that event_id parsed from path actually
         #   match those given in content
-        result = await self.handler.on_send_join_request(origin, content, room_id)
+
+        lazy_load_members = False
+        if self._enable_msc2775:
+            lazy_load_members = parse_boolean_from_args(
+                query, "org.matrix.msc2775.lazy_load_members", default=False
+            )
+        result = await self.handler.on_send_join_request(
+            origin, content, room_id, lazy_load_members
+        )
         return 200, result
 
 

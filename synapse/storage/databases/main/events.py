@@ -1319,14 +1319,17 @@ class PersistEventsStore:
 
         return [ec for ec in events_and_contexts if ec[0] not in to_remove]
 
-    def _store_event_txn(self, txn, events_and_contexts):
+    def _store_event_txn(
+        self,
+        txn: LoggingTransaction,
+        events_and_contexts: Iterable[Tuple[EventBase, EventContext]],
+    ):
         """Insert new events into the event, event_json, redaction and
         state_events tables.
 
         Args:
-            txn (twisted.enterprise.adbapi.Connection): db connection
-            events_and_contexts (list[(EventBase, EventContext)]): events
-                we are persisting
+            txn: db connection
+            events_and_contexts: events we are persisting
         """
 
         if not events_and_contexts:
@@ -1376,8 +1379,10 @@ class PersistEventsStore:
                     "contains_url": (
                         "url" in event.content and isinstance(event.content["url"], str)
                     ),
+                    "state_key": event.get("state_key"),
+                    "rejection_reason": ctx.rejected or None,
                 }
-                for event, _ in events_and_contexts
+                for event, ctx in events_and_contexts
             ],
         )
 

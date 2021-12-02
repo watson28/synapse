@@ -62,6 +62,7 @@ class _BackgroundUpdates:
     INDEX_STREAM_ORDERING2_ROOM_STREAM = "index_stream_ordering2_room_stream"
     INDEX_STREAM_ORDERING2_TS = "index_stream_ordering2_ts"
     REPLACE_STREAM_ORDERING_COLUMN = "replace_stream_ordering_column"
+    POPULATE_EVENTS_STATE_KEY = "populate_events_state_key"
 
 
 @attr.s(slots=True, frozen=True)
@@ -233,6 +234,11 @@ class EventsBackgroundUpdatesStore(SQLBaseStore):
         )
 
         ################################################################################
+
+        self.db_pool.updates.register_background_update_handler(
+            _BackgroundUpdates.POPULATE_EVENTS_STATE_KEY,
+            self._background_populate_events_state_key,
+        )
 
     async def _background_reindex_fields_sender(self, progress, batch_size):
         target_min_stream_id = progress["target_min_stream_id_inclusive"]
@@ -1281,3 +1287,63 @@ class EventsBackgroundUpdatesStore(SQLBaseStore):
         )
 
         return 0
+
+    async def _background_populate_events_state_key(
+        self, progress: JsonDict, batch_size: int
+    ) -> int:
+        """Populate events.state_key and events.rejection_reason."""
+
+        def process(txn: Cursor) -> bool:
+            # if this is our first pass, find the endpoints
+            last_stream = progress.get("last_stream")
+            max_stream = progress.get("max_stream")
+            if last_stream is None:
+                txn.execute(
+                    """
+                    SELECT MIN(stream_ordering), MAX(stream_ordering) FROM events
+                    """
+                )
+                row = txn.fetchone()
+                assert row is not None
+                (min, max_stream) = row
+                if min is None:
+                    # no events rows!
+                    return True
+
+                last_stream = min - 1
+
+            if last_stream >= max_stream:
+                # we're done
+                return True
+
+            txn.execute(
+                """
+                UPDATE events SET
+                    state_key = (SELECT state_key FROM state_events se WHERE se.event_id = events.event_id),
+                    rejection_reason = (SELECT reason FROM rejections rej WHERE rej.event_id = events.event_id)
+                WHERE stream_ordering > ? AND stream_ordering <= ?
+                """,
+                (last_stream, last_stream + batch_size),
+            )
+
+            last_stream += batch_size
+            logger.info(
+                "populated events.state_key up to %i/%i", last_stream, max_stream
+            )
+
+            self.db_pool.updates._background_update_progress_txn(
+                txn,
+                _BackgroundUpdates.POPULATE_EVENTS_STATE_KEY,
+                {"last_stream": last_stream, "max_stream": max_stream},
+            )
+            return False
+
+        result = await self.db_pool.runInteraction(
+            "background_populate_events_state_key", process
+        )
+
+        if result:
+            await self.db_pool.updates._end_background_update(
+                _BackgroundUpdates.POPULATE_EVENTS_STATE_KEY
+            )
+        return batch_size

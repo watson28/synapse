@@ -56,7 +56,7 @@ Changes in SCHEMA_VERSION = 67:
 """
 
 
-SCHEMA_COMPAT_VERSION = 66  # 66: state_key column in `events`
+SCHEMA_COMPAT_VERSION = 67  # 67: no new `events` with unpopulated `state_key`
 """Limit on how far the synapse codebase can be rolled back without breaking db compat
 
 This value is stored in the database, and checked on startup. If the value in the

@@ -658,7 +658,7 @@ class FederationServer(FederationBase):
         )
 
         prev_state_ids = await context.get_prev_state_ids()
-        state_ids: Iterable[str]
+        state_ids: List[str]
         if lazy_load_members:
             # return all non-member events
             state_ids = [
@@ -666,6 +666,14 @@ class FederationServer(FederationBase):
                 for (event_type, state_key), event_id in prev_state_ids.items()
                 if event_type != EventTypes.Member
             ]
+
+            # we also need the current state of the current user (it's going to
+            # be an auth event for the new join, so we may as well return it)
+            current_membership_event_id = prev_state_ids.get(
+                (EventTypes.Member, event.state_key)
+            )
+            if current_membership_event_id is not None:
+                state_ids.append(current_membership_event_id)
 
             # TODO: return a few members:
             #   - those with invites

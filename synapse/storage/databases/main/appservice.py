@@ -26,7 +26,7 @@ from synapse.events import EventBase
 from synapse.storage._base import SQLBaseStore, db_to_json
 from synapse.storage.database import DatabasePool, LoggingDatabaseConnection
 from synapse.storage.databases.main.events_worker import EventsWorkerStore
-from synapse.types import JsonDict
+from synapse.types import DeviceLists, JsonDict
 from synapse.util import json_encoder
 
 if TYPE_CHECKING:
@@ -199,6 +199,7 @@ class ApplicationServiceTransactionWorkerStore(
         events: List[EventBase],
         ephemeral: List[JsonDict],
         to_device_messages: List[JsonDict],
+        device_list_summary: DeviceLists,
     ) -> AppServiceTransaction:
         """Atomically creates a new transaction for this application service
         with the given list of events. Ephemeral events are NOT persisted to the
@@ -209,6 +210,7 @@ class ApplicationServiceTransactionWorkerStore(
             events: A list of persistent events to put in the transaction.
             ephemeral: A list of ephemeral events to put in the transaction.
             to_device_messages: A list of to-device messages to put in the transaction.
+            device_list_summary: The device list summary to include in the transaction.
 
         Returns:
             A new transaction.
@@ -244,6 +246,7 @@ class ApplicationServiceTransactionWorkerStore(
                 events=events,
                 ephemeral=ephemeral,
                 to_device_messages=to_device_messages,
+                device_list_summary=device_list_summary,
             )
 
         return await self.db_pool.runInteraction(
@@ -341,6 +344,7 @@ class ApplicationServiceTransactionWorkerStore(
             events=events,
             ephemeral=[],
             to_device_messages=[],
+            device_list_summary=DeviceLists(),
         )
 
     def _get_last_txn(self, txn, service_id: Optional[str]) -> int:

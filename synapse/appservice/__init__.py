@@ -188,9 +188,33 @@ class ApplicationService:
 
         # check joined member events
         for user_id in member_list:
-            if self.is_user_in_namespace(user_id):
+            if self.is_interested_in_user(user_id):
                 return True
         return False
+
+    def is_interested_in_user(
+        self,
+        user_id: str,
+    ) -> bool:
+        """
+        Returns whether the application is interested in a given user ID.
+
+        The appservice is considered to be interested in a user if either: the
+        user ID is in the appservice's user namespace, or if the user is the
+        appservice's configured sender_localpart.
+
+        Args:
+            user_id: The ID of the user to check.
+
+        Returns:
+            True if the application service is interested in the user, False if not.
+        """
+        return (
+            # User is the appservice's sender_localpart user
+            user_id == self.sender
+            # User is in a defined namespace
+            or self.is_user_in_namespace(user_id)
+        )
 
     @cached(num_args=1, cache_context=True)
     async def is_interested_in_room(
@@ -253,12 +277,13 @@ class ApplicationService:
         """
         # Do cheap checks first
 
-        # Check if we're interested in this user by namespace
-        if self.is_user_in_namespace(event.sender):
+        # Check if we're interested in this user by namespace (or if they're the
+        # sender_localpart user)
+        if self.is_interested_in_user(event.sender):
             return True
 
         # or, if this is a membership event, the user it references by namespace
-        if event.type == EventTypes.Member and self.is_user_in_namespace(
+        if event.type == EventTypes.Member and self.is_interested_in_user(
             event.state_key
         ):
             return True
@@ -287,7 +312,7 @@ class ApplicationService:
             True if this service would like to know about presence for this user.
         """
         # Find all the rooms the sender is in
-        if self.is_user_in_namespace(user_id.to_string()):
+        if self.is_interested_in_user(user_id.to_string()):
             return True
         room_ids = await store.get_rooms_for_user(user_id.to_string())
 

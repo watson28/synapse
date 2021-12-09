@@ -87,7 +87,8 @@ class ApplicationServiceTestCase(unittest.TestCase):
         self.assertTrue(
             (
                 yield defer.ensureDeferred(
-                    self.service.is_interested_in_event(self.event)
+                    # We need to provide the store here in order to carry out room checks
+                    self.service.is_interested_in_event(self.event, self.store)
                 )
             )
         )

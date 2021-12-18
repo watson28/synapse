@@ -308,6 +308,11 @@ class SynapseRequest(Request):
             if self.finish_time is not None:
                 self._finished_processing()
 
+    def write(self, data):
+        super().write(data)
+        if self._opentracing_span:
+            self._opentracing_span.log_kv({"event": "Wrote data", "size": len(data)})
+
     def finish(self) -> None:
         """Called when all response data has been written to this Request.
 

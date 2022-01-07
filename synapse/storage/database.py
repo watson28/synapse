@@ -51,7 +51,6 @@ from synapse.logging.context import (
     current_context,
     make_deferred_yieldable,
 )
-from synapse.logging.opentracing import trace
 from synapse.metrics import register_threadpool
 from synapse.metrics.background_process_metrics import run_as_background_process
 from synapse.storage.background_updates import BackgroundUpdater
@@ -95,7 +94,12 @@ UNIQUE_INDEX_BACKGROUND_UPDATES = {
 class NastyConnectionWrapper:
     def __init__(self, connection):
         self._connection = connection
-        self.commit = trace(connection.commit, "db.conn.commit")
+        self._synapse_parent_context = None
+
+    def commit(self, *args, **kwargs):
+        with LoggingContext("db_commit", parent_context = self._synapse_parent_context):
+            with opentracing.start_active_span("db.conn.commit"):
+                self._connection.commit(*args, **kwargs)
 
     def __getattr__(self, item):
         return getattr(self._connection, item)
@@ -829,6 +833,10 @@ class DatabasePool:
             # committed/rolled back before putting the connection back in the
             # pool).
             assert not self.engine.in_transaction(conn)
+
+            # HACK: record the parent context in 'conn' so that we can tie later commits
+            #    back to it
+            conn._connection._synapse_parent_context = parent_context
 
             with LoggingContext(
                 str(curr_context), parent_context=parent_context

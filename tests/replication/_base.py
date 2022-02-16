@@ -131,7 +131,7 @@ class BaseStreamTestCase(unittest.HomeserverTestCase):
         # `IConnector`, which is responsible for calling the factory
         # `clientConnectionLost`. The reconnecting factory then calls
         # `IConnector.connect` to attempt a reconnection. The transport is meant
-        # to all `connectionLost` on the `IConnector`. So I *think* we need to
+        # to call `connectionLost` on the `IConnector`. So I *think* we need to
         # make a `FakeConnector` and pass that to `FakeTransport`?
         self.hs.get_tcp_replication()._factory.retry()
         self.worker_hs.get_tcp_replication()._factory.retry()

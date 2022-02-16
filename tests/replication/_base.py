@@ -14,7 +14,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 
-from twisted.internet.address import IPv4Address
 from twisted.internet.protocol import Protocol
 from twisted.web.resource import Resource
 
@@ -22,12 +21,7 @@ from synapse.app.generic_worker import GenericWorkerServer
 from synapse.http.site import SynapseRequest, SynapseSite
 from synapse.replication.http import ReplicationRestResource
 from synapse.replication.tcp.client import ReplicationDataHandler
-from synapse.replication.tcp.handler import ReplicationCommandHandler
-from synapse.replication.tcp.protocol import ClientReplicationStreamProtocol
-from synapse.replication.tcp.resource import (
-    ReplicationStreamProtocolFactory,
-    ServerReplicationStreamProtocol,
-)
+
 from synapse.server import HomeServer
 
 from tests import unittest
@@ -39,6 +33,21 @@ except ImportError:
     hiredis = None  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+class FakeConnector:
+    """
+    A fake connector class, reconnects.
+    """
+    def __init__(self, hs):
+        self._hs = hs
+
+    def stopConnecting(self):
+        pass
+
+    def connect(self):
+        # Restart replication.
+        self._hs.get_tcp_replication().start_replication(self._hs)
 
 
 class BaseStreamTestCase(unittest.HomeserverTestCase):
@@ -117,7 +126,6 @@ class BaseStreamTestCase(unittest.HomeserverTestCase):
         return TestReplicationDataHandler(self.worker_hs)
 
     def reconnect(self):
-        pass
         self.disconnect()
 
         # TODO: The following fail as nothing has called on
@@ -133,8 +141,22 @@ class BaseStreamTestCase(unittest.HomeserverTestCase):
         # `IConnector.connect` to attempt a reconnection. The transport is meant
         # to call `connectionLost` on the `IConnector`. So I *think* we need to
         # make a `FakeConnector` and pass that to `FakeTransport`?
-        self.hs.get_tcp_replication()._factory.retry()
-        self.worker_hs.get_tcp_replication()._factory.retry()
+
+        # Make a `FakeConnector` to emulate the behavior of `connectTCP. That
+        # creates an `IConnector`, which is responsible for calling the factory
+        # `clientConnectionLost`. The reconnecting factory then calls
+        # `IConnector.connect` to attempt a reconnection. The transport is meant
+        # to call `connectionLost` on the `IConnector`.
+        #
+        # Most of that is bypassed by directly calling `retry` on the factory,
+        # which schedules a `connect()` call on the connector.
+        hs_factory = self.hs.get_tcp_replication()._factory
+        hs_factory.retry(FakeConnector(self.hs))
+        worker_factory = self.worker_hs.get_tcp_replication()._factory
+        worker_factory.retry(FakeConnector(self.worker_hs))
+
+        # Wait for the reconnects to happen.
+        self.pump(max(hs_factory.delay, worker_factory.delay) + 1)
 
         self.connect_any_redis_attempts()
 
@@ -142,6 +164,7 @@ class BaseStreamTestCase(unittest.HomeserverTestCase):
         for client_protocol, server_protocol in self._redis_transports:
             client_protocol.loseConnection()
             server_protocol.loseConnection()
+        self._redis_transports = []
 
     def replicate(self):
         """Tell the master side of replication that something has happened, and then
@@ -558,8 +581,13 @@ class FakeRedisPubSubProtocol(Protocol):
             self.send("OK")
         elif command == b"GET":
             self.send(None)
+
+        # Connection keep-alives.
+        elif command == b"PING":
+            self.send("PONG")
+
         else:
-            raise Exception("Unknown command")
+            raise Exception(f"Unknown command: {command}")
 
     def send(self, msg):
         """Send a message back to the client."""

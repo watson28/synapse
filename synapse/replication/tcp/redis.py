@@ -256,6 +256,10 @@ class SynapseRedisFactory(txredisapi.RedisFactory):
             convertNumbers=convertNumbers,
         )
 
+        # Set the homeserver reactor as the clock such that tests use the fake
+        # reactor.
+        self.clock = hs.get_reactor()
+        # Confusingly, get_clock() returns a Clock, not a Reactor.
         hs.get_clock().looping_call(self._send_ping, 30 * 1000)
 
     @wrap_as_background_process("redis_ping")

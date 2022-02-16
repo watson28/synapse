@@ -28,8 +28,6 @@ class BaseSlavedStoreTestCase(BaseStreamTestCase):
     def prepare(self, reactor, clock, hs):
         super().prepare(reactor, clock, hs)
 
-        self.reconnect()
-
         self.master_store = hs.get_datastore()
         self.slaved_store = self.worker_hs.get_datastore()
         self.storage = hs.get_storage()

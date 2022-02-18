@@ -47,77 +47,7 @@ logger = logging.getLogger(__name__)
 #
 # [1] https://pip.pypa.io/en/stable/reference/pip_install/#requirement-specifiers.
 
-REQUIREMENTS = [
-    # we use the TYPE_CHECKER.redefine method added in jsonschema 3.0.0
-    "jsonschema>=3.0.0",
-    # frozendict 2.1.2 is broken on Debian 10: https://github.com/Marco-Sulla/python-frozendict/issues/41
-    "frozendict>=1,!=2.1.2",
-    "unpaddedbase64>=1.1.0",
-    "canonicaljson>=1.4.0",
-    # we use the type definitions added in signedjson 1.1.
-    "signedjson>=1.1.0",
-    "pynacl>=1.2.1",
-    "idna>=2.5",
-    # validating SSL certs for IP addresses requires service_identity 18.1.
-    "service_identity>=18.1.0",
-    # Twisted 18.9 introduces some logger improvements that the structured
-    # logger utilises
-    "Twisted>=18.9.0",
-    "treq>=15.1",
-    # Twisted has required pyopenssl 16.0 since about Twisted 16.6.
-    "pyopenssl>=16.0.0",
-    "pyyaml>=3.11",
-    "pyasn1>=0.1.9",
-    "pyasn1-modules>=0.0.7",
-    "bcrypt>=3.1.0",
-    "pillow>=5.4.0",
-    "sortedcontainers>=1.4.4",
-    "pymacaroons>=0.13.0",
-    "msgpack>=0.5.2",
-    "phonenumbers>=8.2.0",
-    # we use GaugeHistogramMetric, which was added in prom-client 0.4.0.
-    "prometheus_client>=0.4.0",
-    # we use `order`, which arrived in attrs 19.2.0.
-    # Note: 21.1.0 broke `/sync`, see #9936
-    "attrs>=19.2.0,!=21.1.0",
-    "netaddr>=0.7.18",
-    "Jinja2>=2.9",
-    "bleach>=1.4.3",
-    "typing-extensions>=3.7.4",
-    # We enforce that we have a `cryptography` version that bundles an `openssl`
-    # with the latest security patches.
-    "cryptography>=3.4.7",
-    # ijson 3.1.4 fixes a bug with "." in property names
-    "ijson>=3.1.4",
-    "matrix-common~=1.1.0",
-]
 
-CONDITIONAL_REQUIREMENTS = {
-    "matrix-synapse-ldap3": ["matrix-synapse-ldap3>=0.1"],
-    "postgres": [
-        # we use execute_values with the fetch param, which arrived in psycopg 2.8.
-        "psycopg2>=2.8 ; platform_python_implementation != 'PyPy'",
-        "psycopg2cffi>=2.8 ; platform_python_implementation == 'PyPy'",
-        "psycopg2cffi-compat==1.1 ; platform_python_implementation == 'PyPy'",
-    ],
-    "saml2": [
-        "pysaml2>=4.5.0",
-    ],
-    "oidc": ["authlib>=0.14.0"],
-    # systemd-python is necessary for logging to the systemd journal via
-    # `systemd.journal.JournalHandler`, as is documented in
-    # `contrib/systemd/log_config.yaml`.
-    "systemd": ["systemd-python>=231"],
-    "url_preview": ["lxml>=4.2.0"],
-    "sentry": ["sentry-sdk>=0.7.2"],
-    "opentracing": ["jaeger-client>=4.0.0", "opentracing>=2.2.0"],
-    "jwt": ["pyjwt>=1.6.4"],
-    # hiredis is not a *strict* dependency, but it makes things much faster.
-    # (if it is not installed, we fall back to slow code.)
-    "redis": ["txredisapi>=1.4.7", "hiredis"],
-    # Required to use experimental `caches.track_memory_usage` config option.
-    "cache_memory": ["pympler"],
-}
 
 ALL_OPTIONAL_REQUIREMENTS: Set[str] = set()
 

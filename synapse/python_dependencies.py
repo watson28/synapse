@@ -48,30 +48,30 @@ logger = logging.getLogger(__name__)
 # [1] https://pip.pypa.io/en/stable/reference/pip_install/#requirement-specifiers.
 
 
-
-ALL_OPTIONAL_REQUIREMENTS: Set[str] = set()
-
-for name, optional_deps in CONDITIONAL_REQUIREMENTS.items():
-    # Exclude systemd as it's a system-based requirement.
-    # Exclude lint as it's a dev-based requirement.
-    if name not in ["systemd"]:
-        ALL_OPTIONAL_REQUIREMENTS = set(optional_deps) | ALL_OPTIONAL_REQUIREMENTS
-
-
-# ensure there are no double-quote characters in any of the deps (otherwise the
-# 'pip install' incantation in DependencyException will break)
-for dep in itertools.chain(
-    REQUIREMENTS,
-    *CONDITIONAL_REQUIREMENTS.values(),
-):
-    if '"' in dep:
-        raise Exception(
-            "Dependency `%s` contains double-quote; use single-quotes instead" % (dep,)
-        )
+# ALL_OPTIONAL_REQUIREMENTS: Set[str] = set()
+#
+# for name, optional_deps in CONDITIONAL_REQUIREMENTS.items():
+#     # Exclude systemd as it's a system-based requirement.
+#     # Exclude lint as it's a dev-based requirement.
+#     if name not in ["systemd"]:
+#         ALL_OPTIONAL_REQUIREMENTS = set(optional_deps) | ALL_OPTIONAL_REQUIREMENTS
+#
+#
+# # ensure there are no double-quote characters in any of the deps (otherwise the
+# # 'pip install' incantation in DependencyException will break)
+# for dep in itertools.chain(
+#     REQUIREMENTS,
+#     *CONDITIONAL_REQUIREMENTS.values(),
+# ):
+#     if '"' in dep:
+#         raise Exception(
+#             "Dependency `%s` contains double-quote; use single-quotes instead" % (dep,)
+#         )
 
 
 def list_requirements():
-    return list(set(REQUIREMENTS) | ALL_OPTIONAL_REQUIREMENTS)
+    return []
+    # return list(set(REQUIREMENTS) | ALL_OPTIONAL_REQUIREMENTS)
 
 
 class DependencyException(Exception):
@@ -93,64 +93,65 @@ class DependencyException(Exception):
 
 
 def check_requirements(for_feature=None):
-    deps_needed = []
-    errors = []
-
-    if for_feature:
-        reqs = CONDITIONAL_REQUIREMENTS[for_feature]
-    else:
-        reqs = REQUIREMENTS
-
-    for dependency in reqs:
-        try:
-            _check_requirement(dependency)
-        except VersionConflict as e:
-            deps_needed.append(dependency)
-            errors.append(
-                "Needed %s, got %s==%s"
-                % (
-                    dependency,
-                    e.dist.project_name,  # type: ignore[attr-defined] # noqa
-                    e.dist.version,  # type: ignore[attr-defined] # noqa
-                )
-            )
-        except DistributionNotFound:
-            deps_needed.append(dependency)
-            if for_feature:
-                errors.append(
-                    "Needed %s for the '%s' feature but it was not installed"
-                    % (dependency, for_feature)
-                )
-            else:
-                errors.append("Needed %s but it was not installed" % (dependency,))
-
-    if not for_feature:
-        # Check the optional dependencies are up to date. We allow them to not be
-        # installed.
-        OPTS: List[str] = sum(CONDITIONAL_REQUIREMENTS.values(), [])
-
-        for dependency in OPTS:
-            try:
-                _check_requirement(dependency)
-            except VersionConflict as e:
-                deps_needed.append(dependency)
-                errors.append(
-                    "Needed optional %s, got %s==%s"
-                    % (
-                        dependency,
-                        e.dist.project_name,  # type: ignore[attr-defined] # noqa
-                        e.dist.version,  # type: ignore[attr-defined] # noqa
-                    )
-                )
-            except DistributionNotFound:
-                # If it's not found, we don't care
-                pass
-
-    if deps_needed:
-        for err in errors:
-            logging.error(err)
-
-        raise DependencyException(deps_needed)
+    return
+    # deps_needed = []
+    # errors = []
+    #
+    # if for_feature:
+    #     reqs = CONDITIONAL_REQUIREMENTS[for_feature]
+    # else:
+    #     reqs = REQUIREMENTS
+    #
+    # for dependency in reqs:
+    #     try:
+    #         _check_requirement(dependency)
+    #     except VersionConflict as e:
+    #         deps_needed.append(dependency)
+    #         errors.append(
+    #             "Needed %s, got %s==%s"
+    #             % (
+    #                 dependency,
+    #                 e.dist.project_name,  # type: ignore[attr-defined] # noqa
+    #                 e.dist.version,  # type: ignore[attr-defined] # noqa
+    #             )
+    #         )
+    #     except DistributionNotFound:
+    #         deps_needed.append(dependency)
+    #         if for_feature:
+    #             errors.append(
+    #                 "Needed %s for the '%s' feature but it was not installed"
+    #                 % (dependency, for_feature)
+    #             )
+    #         else:
+    #             errors.append("Needed %s but it was not installed" % (dependency,))
+    #
+    # if not for_feature:
+    #     # Check the optional dependencies are up to date. We allow them to not be
+    #     # installed.
+    #     OPTS: List[str] = sum(CONDITIONAL_REQUIREMENTS.values(), [])
+    #
+    #     for dependency in OPTS:
+    #         try:
+    #             _check_requirement(dependency)
+    #         except VersionConflict as e:
+    #             deps_needed.append(dependency)
+    #             errors.append(
+    #                 "Needed optional %s, got %s==%s"
+    #                 % (
+    #                     dependency,
+    #                     e.dist.project_name,  # type: ignore[attr-defined] # noqa
+    #                     e.dist.version,  # type: ignore[attr-defined] # noqa
+    #                 )
+    #             )
+    #         except DistributionNotFound:
+    #             # If it's not found, we don't care
+    #             pass
+    #
+    # if deps_needed:
+    #     for err in errors:
+    #         logging.error(err)
+    #
+    #     raise DependencyException(deps_needed)
 
 
 def _check_requirement(dependency_string):

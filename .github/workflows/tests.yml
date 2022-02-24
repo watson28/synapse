@@ -47,7 +47,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v2
-      - run: pip install tox
+      - run: pip install towncrier
       - run: scripts-dev/check-newsfragment
         env:
           PULL_REQUEST_NUMBER: ${{ github.event.number }}

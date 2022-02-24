@@ -235,7 +235,7 @@ commonmark = "==0.9.1"
 pygithub = "==1.55"
 # The following are executed as commands by the release script.
 twine = "*"
-towncrier = "*"
+towncrier = ">=18.6.0rc1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

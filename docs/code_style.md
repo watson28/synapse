@@ -46,7 +46,7 @@ pip install -e ".[lint,mypy]"
     Auto-fix imports with:
 
     ```sh
-    isort -rc synapse tests
+    isort .
     ```
 
     `-rc` means to recursively search the given directories.

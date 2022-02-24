@@ -54,6 +54,7 @@ include = '''\.pyi?$|\
     |synmark\
 )$\
 '''
+skip_gitignore = true
 
 [tool.isort]
 line_length = 88

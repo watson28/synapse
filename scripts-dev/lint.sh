@@ -106,7 +106,7 @@ echo
 set -x
 
 isort "${files[@]}"
-python3 -m black "${files[@]}"
+python3 -m black .
 ./scripts-dev/config-lint.sh
 flake8 "${files[@]}"
 mypy

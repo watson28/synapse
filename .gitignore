@@ -28,6 +28,7 @@ __pycache__/
 /.python-version
 /*.signing.key
 /env/
+/.env*/
 /.venv*/
 /homeserver*.yaml
 /logs

@@ -24,7 +24,7 @@ pip install -e ".[lint,mypy]"
     functionality) with:
 
     ```sh
-    black . --exclude="\.tox|build|env"
+    black .
     ```
 
 -   **flake8**
